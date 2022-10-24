@@ -1,5 +1,7 @@
 package org.daryl.apicascade;
 
+import org.apache.commons.cli.*;
+
 public class Cascade {
 
     /*
@@ -7,11 +9,26 @@ public class Cascade {
     to open a GUI (Under Construction).
      */
     public static void main(String[] args) {
+        // Create the commandline parser
+        CommandLineParser parser = new DefaultParser();
 
-        if(args[0].equals("-gui")) {
-            HelloApplication.startGUI();
-        } else {
-            System.exit(0);
+        // Create the commandline options
+        Options options = new Options();
+        options.addOption("gui", false, "Opens the gui interface.");
+        options.addOption("h", "help", false, "Display the help page.");
+
+        // Parse the commandline for options.
+        try {
+            CommandLine line = parser.parse(options, args);
+
+            if(line.hasOption("gui")) {
+                HelloApplication.startGUI();
+            } else if(line.hasOption("h") || !line.getArgList().isEmpty()) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("api-cascade [options]", options);
+            }
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 }

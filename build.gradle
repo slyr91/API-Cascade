@@ -12,13 +12,6 @@ repositories {
     mavenCentral()
 }
 
-// https://mvnrepository.com/artifact/commons-cli/commons-cli
-dependencies {
-    implementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
-
-}
-
-
 ext {
     junitVersion = '5.8.2'
 }
@@ -45,6 +38,7 @@ dependencies {
     implementation('com.dlsc.formsfx:formsfx-core:11.5.0') {
         exclude(group: 'org.openjfx')
     }
+    implementation 'commons-cli:commons-cli:1.4'
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")

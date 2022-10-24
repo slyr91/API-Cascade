@@ -1,6 +1,7 @@
 module org.daryl.apicascade {
     requires javafx.controls;
     requires javafx.fxml;
+    requires commons.cli;
 
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
