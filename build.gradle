@@ -25,7 +25,7 @@ tasks.withType(JavaCompile) {
 
 application {
     mainModule = 'org.daryl.apicascade'
-    mainClass = 'org.daryl.apicascade.Cascade'
+    mainClass = 'org.daryl.apicascade.APICascader'
 }
 
 javafx {
@@ -39,9 +39,14 @@ dependencies {
         exclude(group: 'org.openjfx')
     }
     implementation 'commons-cli:commons-cli:1.4'
+    implementation 'org.yaml:snakeyaml:1.33'
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+run {
+    standardInput = System.in
 }
 
 test {
@@ -52,7 +57,7 @@ jlink {
     imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
-        name = 'app'
+        name = 'api-cascade'
     }
 }
 
