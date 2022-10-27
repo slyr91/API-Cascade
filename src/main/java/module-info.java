@@ -10,4 +10,5 @@ module org.daryl.apicascade {
 
     opens org.daryl.apicascade to javafx.fxml;
     exports org.daryl.apicascade;
+    exports org.daryl.apicascade.cascades;
 }

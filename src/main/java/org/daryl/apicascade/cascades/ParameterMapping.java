@@ -1,27 +1,27 @@
 package org.daryl.apicascade.cascades;
 
 public class ParameterMapping {
-    private String apiParamter;
-    private String cascadeParamter;
+    private String apiParameter;
+    private String cascadeParameter;
 
     public ParameterMapping(String apiParameter, String cascadeParameter) {
-        this.apiParamter = apiParameter;
-        this.cascadeParamter = cascadeParameter;
+        this.apiParameter = apiParameter;
+        this.cascadeParameter = cascadeParameter;
     }
 
-    public String getApiParamter() {
-        return apiParamter;
+    public String getApiParameter() {
+        return apiParameter;
     }
 
-    public void setApiParamter(String apiParamter) {
-        this.apiParamter = apiParamter;
+    public void setApiParameter(String apiParameter) {
+        this.apiParameter = apiParameter;
     }
 
-    public String getCascadeParamter() {
-        return cascadeParamter;
+    public String getCascadeParameter() {
+        return cascadeParameter;
     }
 
-    public void setCascadeParamter(String cascadeParamter) {
-        this.cascadeParamter = cascadeParamter;
+    public void setCascadeParameter(String cascadeParameter) {
+        this.cascadeParameter = cascadeParameter;
     }
 }

@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class CascadeManager {
 
@@ -49,7 +47,7 @@ public class CascadeManager {
         String[] splitParameters = userParameters.split(",");
         for (String parameter :
                 splitParameters) {
-            userParametersList.add(new Parameter(parameter));
+            userParametersList.add(new Parameter(parameter.trim()));
         }
 
         System.out.println("Next we are going to specify the API Endpoints this cascade will trigger. Please use the " +
@@ -66,11 +64,15 @@ public class CascadeManager {
 
             //TODO add requests for tokens needed to authenticate with API Endpoint
 
+            // Map the URL parameters to the cascade parameters.
             List<ParameterMapping> parameterMappings = new ArrayList<>();
             if(!urlParameters.isEmpty()) {
+                Set<String> urlParameterSet = new HashSet<>(urlParameters);
+                System.out.println();
+                System.out.println("You have the following cascade parameters available: " + userParameters);
                 System.out.println("Please provide mappings for the following URL Parameters to your cascade's parameters:");
                 for (String urlParameter:
-                        urlParameters) {
+                        urlParameterSet) {
                     System.out.print(urlParameter + "= ");
                     String mappedParameter = reader.nextLine();
                     parameterMappings.add(new ParameterMapping(urlParameter, mappedParameter));
