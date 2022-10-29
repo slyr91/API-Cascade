@@ -11,7 +11,7 @@ import java.util.*;
 
 public class CascadeManager {
 
-    //TODO implement create cascade method
+    //TODO add input validation and request for api authorization information
     public static Cascade createCascade(String name) throws FileAlreadyExistsException {
 
         // Check to see if the Cascades folder has already been created and if not create it.
@@ -98,7 +98,6 @@ public class CascadeManager {
         return cascade;
     }
 
-    //TODO Finish building the extractURLParameters method to get the createCascade method working.
     private static List<String> extractURLParameters(String apiURL) {
         List<String> extractedParameters = new ArrayList<>();
 
@@ -125,7 +124,6 @@ public class CascadeManager {
         return extractedParameters;
     }
 
-    //TODO implement delete cascade method
     public static boolean deleteCascade(String name) {
         File cascadeFile = Path.of("./Cascades/" + name + ".yaml").toFile();
 
