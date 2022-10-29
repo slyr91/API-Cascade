@@ -90,4 +90,30 @@ class CascadeManagerTest {
         File cascadeFile = Path.of("./Cascades/" + name + ".yaml").toFile();
         cascadeFile.delete();
     }
+
+    @Test
+    void deleteCascadeTest() {
+        String name = "Test";
+
+        String simulatedInputString = """
+                serial,asset\n
+                http://example.com/api/v1/devices?serial={$serial}&asset={$asset}\n
+                serial\n
+                asset\n
+                http://example.com/api/v1/devices?serial={$serial}&asset={$asset}&delete={$delete}serial\n
+                asset\n
+                delete\n
+                done\n
+                """;
+        simulatedInput = new ByteArrayInputStream(simulatedInputString.getBytes());
+        System.setIn(simulatedInput);
+
+        try {
+            CascadeManager.createCascade(name);
+        } catch (FileAlreadyExistsException e) {
+            fail("A test file wasn't cleaned up from an earlier test");
+        }
+
+        assertTrue(CascadeManager.deleteCascade(name));
+    }
 }
