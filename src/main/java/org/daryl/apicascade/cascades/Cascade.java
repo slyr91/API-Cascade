@@ -1,6 +1,7 @@
 package org.daryl.apicascade.cascades;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Cascade {
         private String name;
@@ -29,5 +30,14 @@ public class Cascade {
 
         public void setApiEndpoints(List<APIEndpoint> apiEndpoints) {
                 this.apiEndpoints = apiEndpoints;
+        }
+
+        @Override
+        public String toString() {
+                return "Cascade{" +
+                        "name='" + name + '\'' +
+                        ", parameters=" + parameters.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                        ", apiEndpoints=" + apiEndpoints.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                        '}';
         }
 }

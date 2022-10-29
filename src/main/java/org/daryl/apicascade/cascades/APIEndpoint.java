@@ -1,6 +1,7 @@
 package org.daryl.apicascade.cascades;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class APIEndpoint {
     private String url;
@@ -25,5 +26,13 @@ public class APIEndpoint {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public String toString() {
+        return "APIEndpoint{" +
+                "url='" + url + '\'' +
+                ", mappings=" + mappings.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                '}';
     }
 }
