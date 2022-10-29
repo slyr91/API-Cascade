@@ -14,6 +14,59 @@ public class CascadeManager {
 
     //TODO implement create cascade method
     public static Cascade createCascade(String name) throws FileAlreadyExistsException {
+        Map<String, String> userInput = new HashMap<>();
+
+        // Gather user input to prompts needed to create a new cascade
+        Scanner reader = new Scanner(System.in);
+
+        System.out.println("Please provide a comma separated list of parameters that will be referenced in this cascade.");
+        System.out.print("Parameters: ");
+        userInput.put("userParameters", reader.nextLine());
+
+        System.out.println("Next we are going to specify the API Endpoints this cascade will trigger. Please use the " +
+                "following format to specify where the cascade parameters will be used. You can repeat parameters.\n" +
+                "\nURL: http://example.com/api/v1/{$Parameter1}?var={$Parameter2}");
+
+
+        // Each URL is placed into the Map with a numerical value such as apiURL0. It also has a comma separated string
+        // of key value pairs, apiURL0Parameters. If calling get on Map for a numerical value returns null then you can
+        // move on to the next section.
+        System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
+        int apiCount = 0;
+        String apiURL = reader.nextLine();
+
+        while(!apiURL.toLowerCase().equals("done")) {
+            //TODO validate user entered URL
+            userInput.put("apiURL" + apiCount, apiURL);
+            List<String> urlParameters = extractURLParameters(apiURL);
+
+            //TODO add requests for tokens needed to authenticate with API Endpoint
+
+            // Map the URL parameters to the cascade parameters.
+            if(!urlParameters.isEmpty()) {
+                Set<String> urlParameterSet = new HashSet<>(urlParameters);
+                System.out.println();
+                System.out.println("You have the following cascade parameters available: " + userInput.get("userParameters"));
+                System.out.println("Please provide mappings for the following URL Parameters to your cascade's parameters:");
+                StringBuilder urlParametersString = new StringBuilder();
+                for (String urlParameter:
+                        urlParameterSet) {
+                    System.out.print(urlParameter + "= ");
+                    urlParametersString.append(urlParameter).append("=").append(reader.nextLine()).append(",");
+                }
+                userInput.put("apiURL" + apiCount + "Parameters", urlParametersString.substring(0, urlParametersString.length()));
+                apiCount++;
+
+            }
+
+            System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
+            apiURL = reader.nextLine();
+        }
+
+        // Use gathered input to create a Cascade object and return it.
+        return createCascade(userInput, name);
+    }
+    public static Cascade createCascade(Map<String, String> userInput, String name) throws FileAlreadyExistsException {
 
         // Check to see if the Cascades folder has already been created and if not create it.
         File cascadeFolder = Path.of("./Cascades").toFile();
@@ -37,11 +90,7 @@ public class CascadeManager {
         Cascade cascade = new Cascade();
         cascade.setName(name);
 
-        // Collect information from the end user.
-        Scanner reader = new Scanner(System.in);
-        System.out.println("Please provide a comma separated list of parameters that will be referenced in this cascade.");
-        System.out.print("Parameters: ");
-        String userParameters = reader.nextLine();
+        String userParameters = userInput.get("userParameters");
 
         List<Parameter> userParametersList = new ArrayList<>();
         String[] splitParameters = userParameters.split(",");
@@ -49,44 +98,32 @@ public class CascadeManager {
                 splitParameters) {
             userParametersList.add(new Parameter(parameter.trim()));
         }
-
-        System.out.println("Next we are going to specify the API Endpoints this cascade will trigger. Please use the " +
-                "following format to specify where the cascade parameters will be used. You can repeat parameters.\n" +
-                "\nURL: http://example.com/api/v1/{$Parameter1}?var={$Parameter2}");
+        cascade.setParameters(userParametersList);
 
         List<APIEndpoint> endpoints = new ArrayList<>();
-        System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
-        String apiURL = reader.nextLine();
+        int apiCount = 0;
 
-        while(!apiURL.toLowerCase().equals("done")) {
+        while(userInput.get("apiURL" + apiCount) != null) {
             //TODO validate user entered URL
-            List<String> urlParameters = extractURLParameters(apiURL);
+            String apiURL = userInput.get("apiURL" + apiCount);
 
             //TODO add requests for tokens needed to authenticate with API Endpoint
 
             // Map the URL parameters to the cascade parameters.
-            List<ParameterMapping> parameterMappings = new ArrayList<>();
-            if(!urlParameters.isEmpty()) {
-                Set<String> urlParameterSet = new HashSet<>(urlParameters);
-                System.out.println();
-                System.out.println("You have the following cascade parameters available: " + userParameters);
-                System.out.println("Please provide mappings for the following URL Parameters to your cascade's parameters:");
-                for (String urlParameter:
-                        urlParameterSet) {
-                    System.out.print(urlParameter + "= ");
-                    String mappedParameter = reader.nextLine();
-                    parameterMappings.add(new ParameterMapping(urlParameter, mappedParameter));
-                }
+            List<ParameterMapping> parameterMappingsList = new ArrayList<>();
+            String[] parameterMappings = userInput.get("apiURL" + apiCount + "Parameters").split(",");
 
+            for (String parameterPairs :
+                    parameterMappings) {
+                String[] kv = parameterPairs.split("=");
+                parameterMappingsList.add(new ParameterMapping(kv[0], kv[1]));
             }
 
-            endpoints.add(new APIEndpoint(apiURL, parameterMappings));
+            endpoints.add(new APIEndpoint(apiURL, parameterMappingsList));
 
-            System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
-            apiURL = reader.nextLine();
+            apiCount++;
         }
 
-        cascade.setParameters(userParametersList);
         cascade.setApiEndpoints(endpoints);
 
         Yaml yaml = new Yaml();
