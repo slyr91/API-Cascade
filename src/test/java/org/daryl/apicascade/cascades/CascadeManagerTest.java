@@ -7,11 +7,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -21,73 +19,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CascadeManagerTest {
 
-    PrintStream originalOutputStream = System.out;
-    InputStream originalInputStream = System.in;
-
-    ByteArrayOutputStream capturedOutput;
-    ByteArrayInputStream simulatedInput;
-
-    @BeforeEach
-    void setUp() {
-        simulatedInput = new ByteArrayInputStream("".getBytes());
-        simulatedInput.reset();
-        System.setIn(simulatedInput);
-
-        capturedOutput = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(capturedOutput);
-        System.setOut(ps);
-    }
-
-    @AfterEach
-    void tearDown() {
-        System.setIn(originalInputStream);
-        System.setOut(originalOutputStream);
-    }
-
     @Test
-    void createCascade() {
+    void createCascadeTestWithNormalInput() {
         String name = "Test";
+        Map<String, String> userInput = new HashMap<>();
+        userInput.put("userParameters", "serial, asset, delete");
+        userInput.put("apiURL0", "http://example.com/api/v1/devices?serial={$serial}&asset={$asset}");
+        userInput.put("apiURL0Parameters", "serial=serial,asset=asset");
+        userInput.put("apiURL1", "http://example.com/api/v1/devices?serial={$serial}&asset={$asset}&action={$delete}");
+        userInput.put("apiURL1Parameters", "serial=serial,asset=asset,delete=delete");
 
-        // Create a thread to run the createCascade method while processing the input on the main thread.
-        Future<Cascade> createdCascade = CompletableFuture.supplyAsync(() -> {
-            try {
-                return CascadeManager.createCascade(name);
-            } catch (FileAlreadyExistsException e) {
-                fail(e);
-            }
-            fail("Something went wrong.");
-            return null;
-        });
-        LocalDateTime startTime = LocalDateTime.now();
-        while(!createdCascade.isDone() && LocalDateTime.now().isBefore(startTime.plusMinutes(1))) {
-            try {
-//                Thread.currentThread().wait(500);
-                capturedOutput.flush();
-            } catch (IOException e) {
-                fail(e);
-            }
-            String[] capturedOutputArray = capturedOutput.toString().split("\n");
-            switch (capturedOutputArray[capturedOutputArray.length - 1]) {
-                case "Parameters: ":
-                    simulatedInput = new ByteArrayInputStream("serial, asset\n".getBytes());
-                case "Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.":
-                    simulatedInput = new ByteArrayInputStream("http://example.com/api/v1/{$serial}/{$asset}\n".getBytes());
-                    simulatedInput = new ByteArrayInputStream("serial\nasset\ndone\n".getBytes());
-                default:
-//                    fail("Some other String has been encountered " + capturedOutputArray[capturedOutputArray.length - 1]);
-            }
-        }
-
-        Cascade generatedCascade = null;
+        Cascade testCascade = null;
         try {
-            generatedCascade = createdCascade.get();
-        } catch (InterruptedException e) {
-            fail(e);
-        } catch (ExecutionException e) {
-            fail(e);
+            testCascade = CascadeManager.createCascade(userInput, name);
+        } catch (FileAlreadyExistsException e) {
+            throw new RuntimeException(e);
         }
 
-        if(generatedCascade == null) {
+        if(testCascade == null) {
             fail("Failed to create a Cascade object");
         }
 
@@ -95,14 +44,20 @@ class CascadeManagerTest {
 
         trueCascade.setName(name);
 
-        Parameter[] parameters = new Parameter[] {new Parameter("serial"), new Parameter("asset")};
+        Parameter[] parameters = new Parameter[] {new Parameter("serial"), new Parameter("asset"), new Parameter("delete")};
         trueCascade.setParameters(new ArrayList<>(List.of(parameters)));
 
-        APIEndpoint[] apiEndpoints = new APIEndpoint[] {new APIEndpoint("http://example.com/api/v1/{$serial}/{$asset}",
+        APIEndpoint[] apiEndpoints = new APIEndpoint[] {new APIEndpoint("http://example.com/api/v1/devices?serial={$serial}&asset={$asset}",
                 new ArrayList<>(List.of(new ParameterMapping[] {new ParameterMapping("serial", "serial"),
-                new ParameterMapping("asset", "asset")})))};
+                new ParameterMapping("asset", "asset")}))),
+                new APIEndpoint("http://example.com/api/v1/devices?serial={$serial}&asset={$asset}&action={$delete}",
+                new ArrayList<>(List.of(new ParameterMapping[] {new ParameterMapping("serial", "serial"),
+                        new ParameterMapping("asset", "asset"), new ParameterMapping("delete", "delete")})))};
         trueCascade.setApiEndpoints(new ArrayList<>(List.of(apiEndpoints)));
 
-        assertEquals(trueCascade, generatedCascade);
+        assertEquals(trueCascade.toString(), testCascade.toString());
+
+        File testCascadeFile = Path.of("./Cascades/Test.yaml").toFile();
+        testCascadeFile.delete();
     }
 }

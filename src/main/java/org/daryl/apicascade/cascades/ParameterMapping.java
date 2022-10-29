@@ -24,4 +24,12 @@ public class ParameterMapping {
     public void setCascadeParameter(String cascadeParameter) {
         this.cascadeParameter = cascadeParameter;
     }
+
+    @Override
+    public String toString() {
+        return "ParameterMapping{" +
+                "apiParameter='" + apiParameter + '\'' +
+                ", cascadeParameter='" + cascadeParameter + '\'' +
+                '}';
+    }
 }
