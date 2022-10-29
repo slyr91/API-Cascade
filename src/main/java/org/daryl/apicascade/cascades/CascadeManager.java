@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -128,6 +127,14 @@ public class CascadeManager {
 
     //TODO implement delete cascade method
     public static boolean deleteCascade(String name) {
+        File cascadeFile = Path.of("./Cascades/" + name + ".yaml").toFile();
+
+        if(cascadeFile.exists()) {
+            return cascadeFile.delete();
+        } else {
+            System.out.println("Cascade with the name " + name + " does not exist.");
+        }
+
         return false;
     }
 
