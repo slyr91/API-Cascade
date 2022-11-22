@@ -8,26 +8,28 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.*;
+import java.awt.Desktop;
 
 public class CascadeManager {
+
+    public static final File CASCADE_FOLDER = Path.of("./Cascades").toFile();
 
     //TODO add input validation and request for api authorization information
     public static Cascade createCascade(String name) throws FileAlreadyExistsException {
 
         // Check to see if the Cascades folder has already been created and if not create it.
-        File cascadeFolder = Path.of("./Cascades").toFile();
 
-        if(!cascadeFolder.exists()) {
-            if(!cascadeFolder.mkdir()){
+        if(!CASCADE_FOLDER.exists()) {
+            if(!CASCADE_FOLDER.mkdir()){
                 throw new RuntimeException("Unable to create Cascades folder. Please check your permissions.");
             }
         }
-        if(!cascadeFolder.isDirectory()) {
+        if(!CASCADE_FOLDER.isDirectory()) {
             throw new RuntimeException("File exists with required folder name \"Cascades\"");
         }
 
         // Check to see if a cascade already exists with the given name.
-        File cascadeFile = Path.of(cascadeFolder.getAbsolutePath(), name + ".yaml").toFile();
+        File cascadeFile = Path.of(CASCADE_FOLDER.getAbsolutePath(), name + ".yaml").toFile();
         if(cascadeFile.exists()) {
             throw new FileAlreadyExistsException("There already exists a cascade with the name " + name);
         }
@@ -54,7 +56,7 @@ public class CascadeManager {
                 "\nURL: http://example.com/api/v1/{$Parameter1}?var={$Parameter2}");
 
         List<APIEndpoint> endpoints = new ArrayList<>();
-        System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
+        System.out.println("Please provide an API endpoint for this cascade or type DONE to finish creating cascade.");
         String apiURL = reader.nextLine();
 
         while(!apiURL.toLowerCase().equals("done")) {
@@ -137,8 +139,30 @@ public class CascadeManager {
     }
 
     //TODO implement edit cascade method
-    public static Cascade editCascade(String name) {
-        return new Cascade();
+    public static boolean editCascade(String name) {
+        // Provide options to edit the cascade.
+        boolean result = true;
+
+        try {
+            File cascadeFile = Path.of(CASCADE_FOLDER.getAbsolutePath(), name + ".yaml").toFile();
+
+            if(!CASCADE_FOLDER.exists()) {
+                throw new IllegalStateException("Cascade folder does not exist or is not a directory. Try to create a " +
+                        "new cascade first.");
+            } else if (!cascadeFile.exists()) {
+                throw new IllegalArgumentException("No cascade with that name exists.");
+            }
+
+            Desktop.getDesktop().open(cascadeFile);
+
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            result = false;
+        } catch (IOException e) {
+            System.err.println("Cascade file failed to open");
+            result = false;
+        }
+
+        return result;
     }
 
     //TODO implement load cascade method

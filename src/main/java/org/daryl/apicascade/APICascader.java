@@ -33,6 +33,8 @@ public class APICascader {
                 HelloApplication.startGUI();
             } else if(line.hasOption("c")) {
                 CascadeManager.createCascade(line.getOptionValue("c"));
+            } else if(line.hasOption("e")) {
+                CascadeManager.editCascade(line.getOptionValue("e"));
             } else if(line.hasOption("h") || !line.getArgList().isEmpty()) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("api-cascade [options]", options);

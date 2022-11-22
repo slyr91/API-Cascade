@@ -7,6 +7,7 @@ module org.daryl.apicascade {
 
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
+    requires java.desktop;
 
     opens org.daryl.apicascade to javafx.fxml;
     exports org.daryl.apicascade;
