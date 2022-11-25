@@ -59,20 +59,69 @@ public class CascadeManager {
         System.out.println("Please provide an API endpoint for this cascade or type DONE to finish creating cascade.");
         String apiURL = reader.nextLine();
 
-        while(!apiURL.toLowerCase().equals("done")) {
+        while(!apiURL.equalsIgnoreCase("done")) {
             //TODO validate user entered URL
             List<String> urlParameters = extractURLParameters(apiURL);
 
+            // Vars for the Options class
+            String requestType;
+            List<Header> headers = new ArrayList<>();
+            String mediaType = null;
+            String responseBody = null;
+            List<String> rbodyParameters = new ArrayList<>();
+
             //TODO add requests for tokens needed to authenticate with API Endpoint
+            List<String> HTTPmethods = Arrays.asList("GET", "POST", "DELETE", "PUT");
+            System.out.println("This API call uses which HTTP Method?: GET, POST, DELETE or PUT");
+            requestType = reader.nextLine().toUpperCase();
+            while (!HTTPmethods.contains(requestType)) {
+                System.out.println("Please enter a valid HTTP Method.");
+                requestType = reader.nextLine().toUpperCase();
+            }
+
+            System.out.println("Does the API Endpoint require authorization or HTTP Header information?");
+            System.out.println("Example: Authorization: bearer <api-key>");
+            System.out.println("y/N");
+            String headersNeeded = reader.nextLine().toUpperCase();
+            if(headersNeeded.equals("Y")) {
+                System.out.println("Provide each header value. Type DONE when finished.");
+
+                String header = "";
+                while(!header.equalsIgnoreCase("DONE")) {
+                    System.out.print("Header: ");
+                    header = reader.nextLine();
+                    if(!header.equalsIgnoreCase("DONE")) {
+                        headers.add(new Header(header));
+                    }
+                }
+            } else {
+                headers = null;
+            }
+
+            if(requestType.equals("POST") || requestType.equals("PUT")) {
+                System.out.println("Since you are going to be sending data in the body of the HTTP request we are " +
+                        "going to have to specify the format. Currently only JSON is supported.");
+
+                mediaType = "JSON";
+
+                System.out.println("Type out the response body in the JSON format.");
+                System.out.println("Example {\"asset\": {$AssetParameter},\"serial\": {$SerialParameter}");
+                System.out.print("Response Body: ");
+                responseBody = reader.nextLine();
+                rbodyParameters = extractURLParameters(responseBody);
+            }
 
             // Map the URL parameters to the cascade parameters.
             List<ParameterMapping> parameterMappings = new ArrayList<>();
-            if(!urlParameters.isEmpty()) {
-                Set<String> urlParameterSet = new HashSet<>(urlParameters);
-                System.out.println("You have the following cascade parameters available: " + userParametersList.toString());
-                System.out.println("Please provide mappings for the following URL Parameters to your cascade's parameters:");
+            if(!urlParameters.isEmpty() || !rbodyParameters.isEmpty()) {
+                Set<String> parameterSet = new HashSet<>();
+                parameterSet.addAll(urlParameters);
+                parameterSet.addAll(rbodyParameters);
+
+                System.out.println("You have the following cascade parameters available: " + userParametersList);
+                System.out.println("Please provide mappings for the following Parameters to your cascade's parameters:");
                 for (String urlParameter:
-                        urlParameterSet) {
+                        parameterSet) {
                     System.out.print(urlParameter + "= ");
                     String mappedParameter = reader.nextLine();
                     parameterMappings.add(new ParameterMapping(urlParameter, mappedParameter));
@@ -80,9 +129,16 @@ public class CascadeManager {
 
             }
 
-            endpoints.add(new APIEndpoint(apiURL, parameterMappings));
+            Options options;
+            if(requestType.equals("POST") || requestType.equals("PUT")) {
+                options = new Options(requestType, headers, mediaType, responseBody);
+            } else {
+                options = new Options(requestType, headers);
+            }
 
-            System.out.println("Please provide the an API endpoint for this cascade or type DONE to finish creating cascade.");
+            endpoints.add(new APIEndpoint(apiURL, parameterMappings, options));
+
+            System.out.println("Please provide an API endpoint for this cascade or type DONE to finish creating cascade.");
             apiURL = reader.nextLine();
         }
 
