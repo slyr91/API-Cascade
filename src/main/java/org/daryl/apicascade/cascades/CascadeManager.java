@@ -1,10 +1,9 @@
 package org.daryl.apicascade.cascades;
 
+import okhttp3.*;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.*;
@@ -61,7 +60,7 @@ public class CascadeManager {
 
         while(!apiURL.equalsIgnoreCase("done")) {
             //TODO validate user entered URL
-            List<String> urlParameters = extractURLParameters(apiURL);
+            List<String> urlParameters = extractParameters(apiURL);
 
             // Vars for the Options class
             String requestType;
@@ -70,7 +69,6 @@ public class CascadeManager {
             String responseBody = null;
             List<String> rbodyParameters = new ArrayList<>();
 
-            //TODO add requests for tokens needed to authenticate with API Endpoint
             List<String> HTTPmethods = Arrays.asList("GET", "POST", "DELETE", "PUT");
             System.out.println("This API call uses which HTTP Method?: GET, POST, DELETE or PUT");
             requestType = reader.nextLine().toUpperCase();
@@ -84,15 +82,18 @@ public class CascadeManager {
             System.out.println("y/N");
             String headersNeeded = reader.nextLine().toUpperCase();
             if(headersNeeded.equals("Y")) {
-                System.out.println("Provide each header value. Type DONE when finished.");
+                System.out.println("Provide each header name and value. Type DONE when finished.");
 
-                String header = "";
-                while(!header.equalsIgnoreCase("DONE")) {
-                    System.out.print("Header: ");
-                    header = reader.nextLine();
-                    if(!header.equalsIgnoreCase("DONE")) {
-                        headers.add(new Header(header));
+                String headerName = "";
+                String headerValue = "";
+                while(!headerName.equalsIgnoreCase("DONE")) {
+                    System.out.print("Header Name: ");
+                    headerName = reader.nextLine();
+                    if(!headerName.equalsIgnoreCase("DONE")) {
+                        break;
                     }
+                    System.out.print("Header Value: ");
+                    headers.add(new Header(headerName, headerValue));
                 }
             } else {
                 headers = null;
@@ -108,7 +109,7 @@ public class CascadeManager {
                 System.out.println("Example {\"asset\": {$AssetParameter},\"serial\": {$SerialParameter}");
                 System.out.print("Response Body: ");
                 responseBody = reader.nextLine();
-                rbodyParameters = extractURLParameters(responseBody);
+                rbodyParameters = extractParameters(responseBody);
             }
 
             // Map the URL parameters to the cascade parameters.
@@ -156,7 +157,7 @@ public class CascadeManager {
         return cascade;
     }
 
-    private static List<String> extractURLParameters(String apiURL) {
+    private static List<String> extractParameters(String apiURL) {
         List<String> extractedParameters = new ArrayList<>();
 
         // Iterate through each character of the url.
@@ -222,7 +223,90 @@ public class CascadeManager {
     }
 
     //TODO implement load cascade method
-    public static Cascade loadCascade(String name) {
-        return new Cascade();
+    public static Cascade loadCascade(String name) throws FileNotFoundException {
+        File cascadeFile = Path.of(CASCADE_FOLDER.getAbsolutePath(), name + ".yaml").toFile();
+        if(!cascadeFile.exists()) {
+            throw new FileNotFoundException("No cascade with that name exists.");
+        }
+
+        Yaml yaml = new Yaml();
+        FileReader freader = new FileReader(cascadeFile);
+        return yaml.load(freader);
+    }
+
+    public static boolean runCascade(String name) {
+        boolean result = true;
+        Cascade cascade = null;
+
+        try {
+            cascade = loadCascade(name);
+        } catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            result = false;
+            System.exit(1);
+        }
+
+        if(cascade != null) {
+            Scanner reader = new Scanner(System.in);
+            System.out.println("Running the " + name + " cascade...");
+
+            Map<String, String> parameterMappings = new HashMap<>();
+            System.out.println("Please provide values for the following parameters:");
+            for (Parameter parameter: cascade.getParameters()) {
+                System.out.print(parameter.getName() + "= ");
+                parameterMappings.put(parameter.getName(), reader.nextLine());
+            }
+
+            System.out.println("The cascade will now run with the provided parameters. API replies will be shown.");
+
+            for(APIEndpoint endpoint: cascade.getApiEndpoints()) {
+                String url = endpoint.getUrl();
+                for(String parameter: parameterMappings.keySet()) {
+                    url = url.replaceAll("{$" + parameter + "}", parameterMappings.get(parameter));
+                }
+                System.out.println("Targeted Endpoint: " + url);
+
+                Options options = endpoint.getOptions();
+
+                OkHttpClient client = new OkHttpClient();
+                Request.Builder requestBuilder = new Request.Builder();
+                requestBuilder.url(url);
+
+                if(Arrays.asList("GET", "DELETE").contains(options.getRequestType())) {
+                    requestBuilder.get();
+                    for(Header header: options.getHeaders()) {
+                        requestBuilder.addHeader(header.getName(), header.getValue());
+                    }
+                } else {
+                    MediaType mediaType = null;
+                    if(options.getMediaType() == "JSON") {
+                        mediaType = MediaType.parse("application/json");
+                    } else {
+                        mediaType = MediaType.parse("application/json");
+                    }
+
+                    String requestBody = options.getResponseBody();
+                    for(String parameter: parameterMappings.keySet()) {
+                        requestBody = requestBody.replaceAll("{$" + parameter + "}", parameterMappings.get(parameter));
+                    }
+
+                    RequestBody body = RequestBody.create(mediaType, requestBody);
+                    requestBuilder.post(body);
+                }
+
+                Request request = requestBuilder.build();
+                try (Response response = client.newCall(request).execute()) {
+                    System.out.println(response.body().string());
+                } catch (IOException e) {
+                    System.err.println("There was an issue with this API Ednpoint.");
+                }
+            }
+
+            System.out.println(name + " Cascade run finished.");
+        } else {
+            result = false;
+        }
+
+        return result;
     }
 }
