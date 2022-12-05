@@ -89,10 +89,11 @@ public class CascadeManager {
                 while(!headerName.equalsIgnoreCase("DONE")) {
                     System.out.print("Header Name: ");
                     headerName = reader.nextLine();
-                    if(!headerName.equalsIgnoreCase("DONE")) {
+                    if(headerName.equalsIgnoreCase("DONE")) {
                         break;
                     }
                     System.out.print("Header Value: ");
+                    headerValue = reader.nextLine();
                     headers.add(new Header(headerName, headerValue));
                 }
             } else {
