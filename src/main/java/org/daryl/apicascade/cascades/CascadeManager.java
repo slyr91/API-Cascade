@@ -250,6 +250,7 @@ public class CascadeManager {
 
         if(cascade != null) {
             Scanner reader = new Scanner(System.in);
+            System.out.println();
             System.out.println("Running the " + name + " cascade...");
 
             Map<String, String> parameterMappings = new HashMap<>();
@@ -258,16 +259,20 @@ public class CascadeManager {
                 System.out.print(parameter.getName() + "= ");
                 parameterMappings.put(parameter.getName(), reader.nextLine());
             }
+            System.out.println();
+            System.out.println();
 
             System.out.println("The cascade will now run with the provided parameters. API replies will be shown.");
+            System.out.println();
+            System.out.println();
 
             for(APIEndpoint endpoint: cascade.getApiEndpoints()) {
                 String url = endpoint.getUrl();
                 for(String parameter: parameterMappings.keySet()) {
                     url = url.replaceAll(("\\{\\$" + parameter + "\\}"), parameterMappings.get(parameter));
-                    System.out.println(url);
                 }
                 System.out.println("Targeted Endpoint: " + url);
+                System.out.println();
 
                 Options options = endpoint.getOptions();
 
@@ -277,9 +282,6 @@ public class CascadeManager {
 
                 if(Arrays.asList("GET", "DELETE").contains(options.getRequestType())) {
                     requestBuilder.get();
-                    for(Header header: options.getHeaders()) {
-                        requestBuilder.addHeader(header.getName(), header.getValue());
-                    }
                 } else {
                     MediaType mediaType = null;
                     if(options.getMediaType() == "JSON") {
@@ -290,7 +292,7 @@ public class CascadeManager {
 
                     String requestBody = options.getResponseBody();
                     for(String parameter: parameterMappings.keySet()) {
-                        requestBody = requestBody.replaceAll("{$" + parameter + "}", parameterMappings.get(parameter));
+                        requestBody = requestBody.replaceAll(("\\{\\$" + parameter + "\\}"), parameterMappings.get(parameter));
                     }
 
 //                    RequestBody body = RequestBody.create(mediaType, requestBody);
@@ -298,11 +300,25 @@ public class CascadeManager {
                     requestBuilder.post(body);
                 }
 
+                // Add headers if they exist in the config file
+                if(options.getHeaders() != null) {
+                    for(Header header: options.getHeaders()) {
+                        if(header != null) {
+                            requestBuilder.addHeader(header.getName(), header.getValue());
+                        }
+                    }
+                }
+
                 Request request = requestBuilder.build();
                 try (Response response = client.newCall(request).execute()) {
+                    System.out.println("Response Code = " + response.code());
+                    System.out.println("Response Message = " + response.message());
                     System.out.println(response.body().string());
+                    System.out.println();
                 } catch (IOException e) {
                     System.err.println("There was an issue with this API Endpoint.");
+                } catch (NullPointerException e) {
+                    System.err.println("Response body was null.");
                 }
             }
 
