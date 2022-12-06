@@ -9,6 +9,7 @@ module org.daryl.apicascade {
     requires com.dlsc.formsfx;
     requires java.desktop;
     requires okhttp3;
+    requires kotlin.stdlib;
 
     opens org.daryl.apicascade to javafx.fxml;
     exports org.daryl.apicascade;

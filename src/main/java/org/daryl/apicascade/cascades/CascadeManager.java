@@ -6,12 +6,13 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.awt.Desktop;
 
 public class CascadeManager {
 
-    public static final File CASCADE_FOLDER = Path.of("./Cascades").toFile();
+    public static final File CASCADE_FOLDER = Paths.get("Cascades").toFile();
 
     //TODO add input validation and request for api authorization information
     public static Cascade createCascade(String name) throws FileAlreadyExistsException {
@@ -263,7 +264,8 @@ public class CascadeManager {
             for(APIEndpoint endpoint: cascade.getApiEndpoints()) {
                 String url = endpoint.getUrl();
                 for(String parameter: parameterMappings.keySet()) {
-                    url = url.replaceAll("{$" + parameter + "}", parameterMappings.get(parameter));
+                    url = url.replaceAll(("\\{\\$" + parameter + "\\}"), parameterMappings.get(parameter));
+                    System.out.println(url);
                 }
                 System.out.println("Targeted Endpoint: " + url);
 
@@ -291,7 +293,8 @@ public class CascadeManager {
                         requestBody = requestBody.replaceAll("{$" + parameter + "}", parameterMappings.get(parameter));
                     }
 
-                    RequestBody body = RequestBody.create(mediaType, requestBody);
+//                    RequestBody body = RequestBody.create(mediaType, requestBody);
+                    RequestBody body = RequestBody.create(requestBody, mediaType);
                     requestBuilder.post(body);
                 }
 
@@ -299,7 +302,7 @@ public class CascadeManager {
                 try (Response response = client.newCall(request).execute()) {
                     System.out.println(response.body().string());
                 } catch (IOException e) {
-                    System.err.println("There was an issue with this API Ednpoint.");
+                    System.err.println("There was an issue with this API Endpoint.");
                 }
             }
 

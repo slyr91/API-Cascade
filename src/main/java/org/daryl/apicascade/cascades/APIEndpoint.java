@@ -14,6 +14,8 @@ public class APIEndpoint {
         this.options =options;
     }
 
+    public APIEndpoint() {};
+
     public Options getOptions() {
         return options;
     }
@@ -41,8 +43,8 @@ public class APIEndpoint {
     @Override
     public String toString() {
         return "APIEndpoint{" +
-                "url='" + url + '\'' +
-                ", mappings=" + mappings.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                "url='" + ((url != null)?url:"null") + '\'' +
+                ", mappings=" + ((mappings != null)?mappings.stream().map(Object::toString).collect(Collectors.joining(",")):"null") +
                 '}';
     }
 }

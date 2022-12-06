@@ -7,6 +7,8 @@ public class Parameter {
         this.name = name;
     }
 
+    public Parameter() {};
+
     public String getName() {
         return name;
     }
@@ -18,7 +20,7 @@ public class Parameter {
     @Override
     public String toString() {
         return "Parameter{" +
-                "name='" + name + '\'' +
+                "name='" + ((name != null)?name:"null") + '\'' +
                 '}';
     }
 }

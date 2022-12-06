@@ -10,6 +10,8 @@ public class Header {
         this.value = value;
     }
 
+    public Header() {};
+
     public String getName() {
         return name;
     }

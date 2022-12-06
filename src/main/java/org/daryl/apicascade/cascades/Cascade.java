@@ -36,8 +36,8 @@ public class Cascade {
         public String toString() {
                 return "Cascade{" +
                         "name='" + name + '\'' +
-                        ", parameters=" + parameters.stream().map(Object::toString).collect(Collectors.joining(",")) +
-                        ", apiEndpoints=" + apiEndpoints.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                        ", parameters=" + ((parameters != null)?parameters.stream().map(Object::toString).collect(Collectors.joining(",")):"null") +
+                        ", apiEndpoints=" + ((apiEndpoints != null)?apiEndpoints.stream().map(Object::toString).collect(Collectors.joining(",")):"null") +
                         '}';
         }
 }

@@ -20,6 +20,8 @@ public class Options {
         this.responseBody = responseBody;
     }
 
+    public Options() {};
+
     public String getMediaType() {
         return mediaType;
     }

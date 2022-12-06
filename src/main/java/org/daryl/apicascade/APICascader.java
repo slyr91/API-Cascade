@@ -37,9 +37,11 @@ public class APICascader {
                 CascadeManager.editCascade(line.getOptionValue("e"));
             } else if(line.hasOption("r")) {
                 CascadeManager.runCascade(line.getOptionValue("r"));
-            } else if(line.hasOption("h") || !line.getArgList().isEmpty()) {
+            } else if(line.hasOption("h")) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("api-cascade [options]", options);
+            } else {
+                System.out.println("Invalid operation. Use -h for help.");
             }
         } catch (ParseException e) {
             throw new RuntimeException(e);

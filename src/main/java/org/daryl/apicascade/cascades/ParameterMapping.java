@@ -9,6 +9,8 @@ public class ParameterMapping {
         this.cascadeParameter = cascadeParameter;
     }
 
+    public ParameterMapping() {};
+
     public String getApiParameter() {
         return apiParameter;
     }
