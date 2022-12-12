@@ -329,4 +329,156 @@ public class CascadeManager {
 
         return result;
     }
+
+    // TODO Use the parameter map to setup the cascade and execute.
+    public static Boolean runCascade(String name, Map<String, String> parameterMap) {
+        boolean result = true;
+        Cascade cascade = null;
+
+        try {
+            cascade = loadCascade(name);
+        } catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            result = false;
+            System.exit(1);
+        }
+
+        if(cascade != null) {
+            Scanner reader = new Scanner(System.in);
+            System.out.println();
+            System.out.println("Running the " + name + " cascade...");
+
+            Map<String, String> parameterMappings = new HashMap<>();
+            for (Parameter parameter: cascade.getParameters()) {
+                if(!parameterMap.containsKey(parameter)) {
+                    System.err.println("Not enough parameters, or incorrect parameters, supplied in this call. Use -p" +
+                            " to get the list of parameters for this cascade.");
+                    return false;
+                }
+                parameterMappings.put(parameter.getName(), parameterMap.get(parameter.getName()));
+            }
+            System.out.println();
+            System.out.println();
+
+            System.out.println("The cascade will now run with the provided parameters. API replies will be shown.");
+            System.out.println();
+            System.out.println();
+
+            for(APIEndpoint endpoint: cascade.getApiEndpoints()) {
+                String url = endpoint.getUrl();
+                for(String parameter: parameterMappings.keySet()) {
+                    url = url.replaceAll(("\\{\\$" + parameter + "\\}"), parameterMappings.get(parameter));
+                }
+                System.out.println("Targeted Endpoint: " + url);
+                System.out.println();
+
+                Options options = endpoint.getOptions();
+
+                OkHttpClient client = new OkHttpClient();
+                Request.Builder requestBuilder = new Request.Builder();
+                requestBuilder.url(url);
+
+                if(Arrays.asList("GET", "DELETE").contains(options.getRequestType())) {
+                    requestBuilder.get();
+                } else {
+                    MediaType mediaType = null;
+                    if(options.getMediaType() == "JSON") {
+                        mediaType = MediaType.parse("application/json");
+                    } else {
+                        mediaType = MediaType.parse("application/json");
+                    }
+
+                    String requestBody = options.getResponseBody();
+                    for(String parameter: parameterMappings.keySet()) {
+                        requestBody = requestBody.replaceAll(("\\{\\$" + parameter + "\\}"), parameterMappings.get(parameter));
+                    }
+
+//                    RequestBody body = RequestBody.create(mediaType, requestBody);
+                    RequestBody body = RequestBody.create(requestBody, mediaType);
+                    requestBuilder.post(body);
+                }
+
+                // Add headers if they exist in the config file
+                if(options.getHeaders() != null) {
+                    for(Header header: options.getHeaders()) {
+                        if(header != null) {
+                            requestBuilder.addHeader(header.getName(), header.getValue());
+                        }
+                    }
+                }
+
+                Request request = requestBuilder.build();
+                try (Response response = client.newCall(request).execute()) {
+                    System.out.println("Response Code = " + response.code());
+                    System.out.println("Response Message = " + response.message());
+                    System.out.println(response.body().string());
+                    System.out.println();
+                } catch (IOException e) {
+                    System.err.println("There was an issue with this API Endpoint.");
+                } catch (NullPointerException e) {
+                    System.err.println("Response body was null.");
+                }
+            }
+
+            System.out.println(name + " Cascade run finished.");
+        } else {
+            result = false;
+        }
+
+        return result;
+    }
+
+    public static String printParameters(String name) {
+        StringBuilder result = new StringBuilder();
+
+        try {
+            Cascade cascade = loadCascade(name);
+
+            List<Parameter> parameters = cascade.getParameters();
+            for (Parameter parameter :
+                    parameters) {
+                result.append(parameter.getName() + "\n");
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("The cascade with the name " + name + " does not exist.");
+        }
+
+        return result.toString();
+    }
+
+    public static String printCascade(String name) {
+        StringBuilder result = new StringBuilder();
+
+        try {
+            Cascade cascade = loadCascade(name);
+
+            result.append(name + ":\n\t");
+
+            result.append("Parameters: ");
+
+            List<Parameter> parameters = cascade.getParameters();
+
+            for (Parameter parameter :
+                    parameters) {
+                result.append(parameter.getName() + " ");
+            }
+
+            result.append("\n");
+
+            List<APIEndpoint> endpoints = cascade.getApiEndpoints();
+
+            result.append("Endpoints:\n");
+
+            for (APIEndpoint endpoint :
+                    endpoints) {
+                result.append(endpoint.getOptions().getRequestType() + " " + endpoint.getUrl() + "\n");
+            }
+
+        } catch (FileNotFoundException e) {
+            System.err.println("The cascade with the name " + name + " does not exist.");
+        }
+
+        return result.toString();
+    }
+
 }
